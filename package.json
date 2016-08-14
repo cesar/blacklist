@@ -1,0 +1,16 @@
+{
+  "name": "ads",
+  "version": "1.0.0",
+  "description": "",
+  "main": "update.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "nodegit": "^0.14.1",
+    "redis": "^2.6.2",
+    "vinyl-fs": "^2.4.3"
+  }
+}
