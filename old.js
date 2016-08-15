@@ -1,10 +1,9 @@
 'use strict'
 const vfs = require('vinyl-fs')
-const redis = require('redis')
-const client = redis.createClient()
 const Git = require('nodegit')
 const path = require('path')
 const fs = require('fs')
+const split = require('split')
 
 // Redis Keys
 const OLD_SET = 'old:ipsets:set'
@@ -125,59 +124,38 @@ function removeOldIpsets () {
  * and add the ipsets to redis
  */
 function addNewIpsets () {
-  return new Promise((resolve, reject) => {
-    // Fetch the new list of items
-    let fileStream = vfs.src(['./list/**/*.ipset', './list/**/*.netset'], {
-      buffer: false
+  // Fetch the new list of items
+  let fileStream = vfs.src(['./list/**/*.ipset', './list/**/*.netset'], {
+    buffer: false
+  })
+  let ips = []
+  fileStream.on('data', function (file) {
+    fileStream.pause()
+    file.pipe(split()).on('data', (line) => {
+      if (!line.startsWith('#') && line.trim()) {
+        ips.push(line.trim())
+      }
     })
-
-    fileStream.on('data', function (file) {
-      fileStream.pause()
-      file.contents.setEncoding('utf8')
-      file.contents.on('data', function (data) {
-        file.contents.pause()
-        // Fetch the actual IPs
-        let ips
-        if (Buffer.isBuffer(data)) {
-          ips = data.toString('utf8').split('\n').filter(function (item) {
-            return !item.startsWith('#') && item.trim()
-          })
-          file.contents.resume()
-        } else {
-          ips = data.split('\n').filter(function (item) {
-            return !item.startsWith('#') && item.trim()
-          })
-          if (ips.length > 0) {
-            client.sadd(NEW_SET, ips, function (err, replies) {
-              if (err) {
-                reject(err)
-              }
-              file.contents.resume()
-            })
-          } else {
-            file.contents.resume()
-          }
-        }
-      })
-
-      file.contents.on('error', (err) => {
-        reject(err)
-      })
-
-      file.contents.on('end', function () {
-        fileStream.resume()
-      })
+    .on('error', err => {
+      console.log(err)
     })
-
-    fileStream.on('error', err => {
-      reject(err)
-    })
-
-    fileStream.on('end', () => {
-      resolve()
+    .on('end', () => {
+      console.log('done file')
+      fileStream.resume()
     })
   })
+
+  fileStream.on('error', err => {
+    console.log(err)
+  })
+
+  fileStream.on('end', () => {
+    console.log('done')
+    console.log(ips.length)
+  })
 }
+
+addNewIpsets()
 
 // function swapIpsets () {
 
@@ -187,11 +165,52 @@ function addNewIpsets () {
 
 // }
 
-addNewIpsets().then(result => {
-  console.log('Success')
-  client.quit()
-}).catch(err => {
-  console.log(err)
-  client.quit()
-})
+// file.contents.setEncoding('utf8')
+//       file.contents.on('data', function (data) {
+//         file.contents.pause()
+//         // Fetch the actual IPs
+//         let ips
+//         if (Buffer.isBuffer(data)) {
+//           ips = data.toString('utf8').split('\n').filter(function (item) {
+//             return !item.startsWith('#') && item.trim()
+//           })
+//           file.contents.resume()
+//         } else {
+//           ips = data.split('\n').filter(function (item) {
+//             return !item.startsWith('#') && item.trim()
+//           })
+//           if (ips.length > 0) {
+//             let fullIPs = []
+//             ips.forEach((item) => {
+//               if (/\//.test(item)) {
+//                 //  expand
+//                 try {
+//                   fullIPs = fullIPs.concat(cidr(item))
+//                 } catch (e) {
+//                   console.log(e)
+//                 }
+//               } else {
+//                 fullIPs.push(item)
+//               }
+//             })
+
+//             client.sadd(NEW_SET, fullIPs, function (err, replies) {
+//               if (err) {
+//                 reject(err)
+//               }
+//               file.contents.resume()
+//             })
+//           } else {
+//             file.contents.resume()
+//           }
+//         }
+//       })
+
+//       file.contents.on('error', (err) => {
+//         reject(err)
+//       })
+
+//       file.contents.on('end', function () {
+//         fileStream.resume()
+//       })
 
