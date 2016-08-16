@@ -4,12 +4,13 @@
   "description": "Anomaly Detection Service - check whether an IP is blacklisted",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.15.2",
+    "chance": "^1.0.4",
     "express": "^4.14.0",
     "ip-set": "^1.0.1",
     "multer": "^1.2.0",
@@ -17,5 +18,8 @@
     "shelljs": "^0.7.3",
     "split": "^1.0.0",
     "vinyl-fs": "^2.4.3"
+  },
+  "devDependencies": {
+    "ava": "^0.16.0"
   }
 }

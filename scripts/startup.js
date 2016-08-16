@@ -20,16 +20,30 @@ const REPO_DIR = 'blocklist-ipsets/'
  * @return {[Object]} IPSet data structure holding the IPs
  */
 function load (cb) {
-
+  let listPath = path.resolve(__dirname, '../blocklist-ipsets')
+  fetchList(listPath, function(err){
+    if (err) {
+      cb(err)
+    } else {
+      loadList(function(err, list){
+        if (err) {
+          cb(err)
+        } else {
+          cb(null, list)
+        }
+      })
+    }
+  })
 }
 
 /**
  * Fetch list from GitHub Repository [https://github.com/firehol/blocklist-ipsets.git]
+ * @param  {String} dir - List directory
  * @param  {Function} cb
  */
-function fetchList (cb) {
+function fetchList (dir, cb) {
   // TODO: handle errors
-  fs.stat(listPath, (err, stats) => {
+  fs.stat(dir, (err, stats) => {
     if (err) {
       // TODO: Output to stdout, to see progress
       shell.exec(`git clone ${REPO_URL} --branch master --single-branch`)
@@ -42,9 +56,12 @@ function fetchList (cb) {
   })
 }
 
+/**
+ * Scan the list directory and load the IPs into memory
+ * @param  {Function} cb
+ */
 function loadList (cb) {
-  let blocklist = new IPSet()
-  let listPath = path.join(__dirname, 'blocklist-ipsets')
+  let list = []
   // Fetch the new list of items as a stream
   let fileStream = vfs.src(['./blocklist-ipsets/**/*.ipset', './blocklist-ipsets/**/*.netset'], {
     buffer: false
@@ -52,18 +69,22 @@ function loadList (cb) {
 
   fileStream.on('data', function (file) {
     fileStream.pause()
-    file.pipe(split()).on('data', (line) => {
-      let strippedLine = line.trim()
-      if (strippedLine && !line.startsWith('#')) {
-        blocklist.add(_sanitizeIP(strippedLine))
-      }
-    })
-    .on('error', err => {
-      cb(err)
-    })
-    .on('end', () => {
+    if (/firehol_level/.test(file.path)) {
+      file.pipe(split()).on('data', (line) => {
+        let strippedLine = line.trim()
+        if (strippedLine && !line.startsWith('#')) {
+          list.push(_sanitizeIP(strippedLine))
+        }
+      })
+      .on('error', err => {
+        cb(err)
+      })
+      .on('end', () => {
+        fileStream.resume()
+      })
+    } else {
       fileStream.resume()
-    })
+    }
   })
 
   fileStream.on('error', err => {
@@ -71,7 +92,8 @@ function loadList (cb) {
   })
 
   fileStream.on('end', () => {
-    cb(null, blocklist)
+    console.log('List length: ' + list.length)
+    cb(null, new IPSet(list))
   })
 
 }
@@ -95,3 +117,5 @@ function _sanitizeIP(line) {
     return line
   }
 }
+
+module.exports = load
