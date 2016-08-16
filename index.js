@@ -10,37 +10,37 @@ const multer = require('multer')
 const upload = multer()
 const list = require('./lib/list')
 const path = require('path')
+const cluster = require('cluster')
 
-const cluster = require('cluster');
-const http = require('http');
 let listPath = path.join(__dirname, 'blocklist-ipsets')
 const REFRESH_PERIOD = 1000 * 60 * 12
 
 if (cluster.isMaster) {
-  //Bootstrap - clone or pull the repo
+  // Bootstrap - clone or pull the repo
   list.fetch(listPath)
-  //Start workers and listen for messages containing notifyRequest
+  // Start workers and listen for messages containing notifyRequest
   const cores = require('os').cpus().length
   let workers = []
   for (var i = 0; i < cores; i++) {
     workers.push(cluster.fork())
   }
   // Update the repo and notify the processes
-  setInterval(function(){
-    startup.fetchList(listPath)
-    for(let id in cluster.workers) {
+  setInterval(function () {
+    list.fetch(listPath)
+    for (let id in cluster.workers) {
       // Don't refresh them all at once
       setTimeout(() => {
         cluster.workers[id].send('refresh')
       }, 10000)
     }
   }, REFRESH_PERIOD) // Every 12 mins
-
-
 } else {
   let blocklist
   // Bootstrap
-  list.load(function(err, list){
+  list.load(function (err, list) {
+    if (err) {
+      console.log(err)
+    }
     blocklist = list
     app.listen(3000, function () {
       console.log('Server up on worker: ' + cluster.worker.id)
@@ -54,7 +54,7 @@ if (cluster.isMaster) {
   app.use(bodyParser.json())
 
   app.post('/check', upload.array(), function (req, res) {
-    //TODO: check whether address is an actual IP (needed?)
+    // TODO: check whether address is an actual IP (needed?)
     let result = blocklist.contains(req.body.address.trim())
     res.json({
       contains: result
@@ -73,5 +73,4 @@ if (cluster.isMaster) {
       })
     }
   })
-
 }
