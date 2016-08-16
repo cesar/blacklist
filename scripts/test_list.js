@@ -6,14 +6,14 @@ const chance = new Chance()
 const total = 1000000
 
 
-let result = ''
-
+/**
+ * Test random IPs to see hit/miss ratio
+ * @type {[type]}
+ */
 startup(function(err, list){
   let count = 0
   for(var i = 0; i < total; i++) {
-    var curr = list.contains(chance.ip())
-    result = result + curr + '\n'
-    if (curr) {
+    if (list.contains(chance.ip())) {
       count++
     }
   }

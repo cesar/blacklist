@@ -12,6 +12,7 @@
     "body-parser": "^1.15.2",
     "chance": "^1.0.4",
     "express": "^4.14.0",
+    "ip-address": "^5.8.2",
     "ip-set": "^1.0.1",
     "multer": "^1.2.0",
     "netmask": "^1.0.6",
