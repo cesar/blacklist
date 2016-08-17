@@ -60,3 +60,12 @@ test('test against popular IPs such as Google, Github, and Facebook', t => {
     t.falsy(result.contains('192.30.252.1'))
   })
 })
+
+test('testing ip line sanitation, should return range in case of CIDR notation', t => {
+  t.plan(2)
+  let line = list._sanitizeIP('1.93.0.224')
+  t.is(line, '1.93.0.224')
+
+  line = list._sanitizeIP('1.10.16.0/20')
+  t.deepEqual(line, {start: '1.10.16.1', end: '1.10.31.255'})
+})
