@@ -15,7 +15,7 @@ const cluster = require('cluster')
 
 let listPath = path.join(__dirname, 'blocklist-ipsets')
 
-const REFRESH_PERIOD = 120000
+const REFRESH_PERIOD = 720000
 
 if (cluster.isMaster) {
   let workerQueue = []
