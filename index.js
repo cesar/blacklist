@@ -15,7 +15,7 @@ const cluster = require('cluster')
 
 let listPath = path.join(__dirname, 'blocklist-ipsets')
 
-const REFRESH_PERIOD = 720000
+const REFRESH_PERIOD = parseInt(process.env.REFRESH_PERIOD) || 720000
 
 if (cluster.isMaster) {
   let workerQueue = []
@@ -84,6 +84,12 @@ if (cluster.isMaster) {
     }
   })
 
+  // On Error, shutdown process
+  process.on('error', err => {
+    console.log(err)
+    process.exit(0)
+  })
+
   function requestHandler (request, response) {
     let data = []
     let flag = false
@@ -92,13 +98,9 @@ if (cluster.isMaster) {
     }).on('end', function() {
       data = Buffer.concat(data).toString();
       let match = /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/.exec(data)
-      console.log(match)
       if (match) {
         data = match[0].trim() //Extract the ip
-        // TODO: Perform check here
-        console.log(data)
         flag = blocklist.contains(data)
-        console.log(flag)
         if (flag) {
           response.writeHead(200, {"Content-Type": "text/html"});
         } else {
