@@ -1,11 +1,17 @@
 'use strict'
 
 //  TODO: Configure startup script using `npm start`
-//  TODO: Add HTTPS support, although is it needed?
+//  TODO: Add flag to indicate which lists are loaded (all or base case)
+//  TODO: Create a README.md
+//  TODO: Move from Express to HTTP
+//  TODO: Test whether error on master tries to fork more processes
+//  TODO: Switch from Vinyl to Glob module for looking at files
+//  TODO: Automated tests
+//  TODO: Configure Prod
+//  TODO: Handle case where a worker gets killed
 
 const express = require('express')
 const app = express()
-const bodyParser = require('body-parser')
 const multer = require('multer')
 const upload = multer()
 const list = require('./lib/list')
@@ -13,16 +19,15 @@ const path = require('path')
 const cluster = require('cluster')
 
 let listPath = path.join(__dirname, 'blocklist-ipsets')
-const REFRESH_PERIOD = 1000 * 60 * 12
+const REFRESH_PERIOD = 1000 * 60 * 2
 
 if (cluster.isMaster) {
   // Bootstrap - clone or pull the repo
   list.fetch(listPath)
   // Start workers and listen for messages containing notifyRequest
   const cores = require('os').cpus().length
-  let workers = []
   for (var i = 0; i < cores; i++) {
-    workers.push(cluster.fork())
+    cluster.fork()
   }
   // Update the repo and notify the processes
   setInterval(function () {
@@ -34,7 +39,15 @@ if (cluster.isMaster) {
       }, 10000)
     }
   }, REFRESH_PERIOD) // Every 12 mins
+
+  //Restart a worker that has failed
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.id} has died, restarting...`)
+    cluster.fork()
+  })
+
 } else {
+  let server
   let blocklist
   // Bootstrap
   list.load(function (err, list) {
@@ -42,16 +55,10 @@ if (cluster.isMaster) {
       console.log(err)
     }
     blocklist = list
-    app.listen(3000, function () {
+    server = app.listen(3000, function () {
       console.log('Server up on worker: ' + cluster.worker.id)
     })
   })
-
-  // parse application/x-www-form-urlencoded
-  app.use(bodyParser.urlencoded({ extended: false }))
-
-  // parse application/json
-  app.use(bodyParser.json())
 
   app.post('/check', upload.array(), function (req, res) {
     // TODO: check whether address is an actual IP (needed?)
@@ -64,12 +71,17 @@ if (cluster.isMaster) {
   // refresh and swap
   process.on('message', (msg) => {
     if (msg === 'refresh') {
-      list.load((err, list) => {
-        if (err) {
-          // TODO: Handle Error
-          console.log(err)
-        }
-        blocklist = list
+      console.log('refreshing')
+      // TODO: Stop accepting requests until the list is update
+      server.close(function(){
+        list.load((err, list) => {
+          if (err) {
+            // TODO: Handle Error
+            console.log(err)
+          }
+          blocklist = list
+          server.listen(3000)
+        })
       })
     }
   })

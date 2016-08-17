@@ -4,7 +4,7 @@
   "description": "Anomaly Detection Service - check whether an IP is blacklisted",
   "main": "index.js",
   "scripts": {
-    "test": "ava"
+    "test": "NODE_ENV=test ava --verbose --timeout=1m"
   },
   "author": "",
   "license": "MIT",
