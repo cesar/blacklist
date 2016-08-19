@@ -1,6 +1,6 @@
 # ADS - Anomaly Detection Service
 
-ADS is a small microservice used to verify wether an IP address is part of an IP black list. The services makes use of Firehol's [blocklist-ipsets](https://github.com/firehol/blocklist-ipsets). 
+ADS is a small microservice used to verify whether an IP address is part of an IP black list. The services makes use of Firehol's [blocklist-ipsets](https://github.com/firehol/blocklist-ipsets). 
 
 ## Installation
 
@@ -36,7 +36,7 @@ $: REFRESH_PERIOD=300000 node index.js
 
 ##### Usage
 
-To determin whether an IP address is part of a list, simply make an HTTP POST request to the base app url:
+To determine whether an IP address is part of a list, simply make an HTTP POST request to the base app url:
 
 ```
 POST http://localhost:3000/
