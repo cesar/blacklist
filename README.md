@@ -8,7 +8,7 @@ ADS is a small microservice used to verify wether an IP address is part of an IP
 $: git clone https://github.com/sezalcru/ads
 $: npm install
 ```
-The service will take a while to set up as it first needs to fetch the blocklist. Once the list is fetched, the service will fork worker processes to handle the requests. The amount of server workers will depend on the amount of CPU cores. Once the service is operational, the list will be refreshed every 12 mins.
+The service will take a while to set up as it first needs to fetch the blocklist. Once the list is fetched, the service will fork worker processes to handle the requests, on port 3000. The amount of server workers will depend on the amount of CPU cores. Once the service is operational, the list will be refreshed every 12 mins.
 
 ## Usage
 
