@@ -21,7 +21,7 @@ if (cluster.isMaster) {
   let workerQueue = []
 
   list.fetch(listPath).then(() => {
-    const cores = require('os').cpus().length
+    const cores = require('os').cpus().length > 3 ? 3 : require('os').cpus().length
     for (var i = 0; i < cores; i++) {
       cluster.fork()
     }
@@ -33,6 +33,8 @@ if (cluster.isMaster) {
           workerQueue.push(cluster.workers[id]) // Fill the queu of workers
         }
         workerQueue.pop().send('refresh') // Start the refresh process
+      }).catch(err => {
+        console.error(err)
       })
     }, REFRESH_PERIOD) // Every 12 mins
 
@@ -75,7 +77,6 @@ if (cluster.isMaster) {
   // refresh
   process.on('message', (msg) => {
     if (msg === 'refresh') {
-      // TODO: Stop accepting requests until the list is update
       server.close(() => {
         // Connections closed
         console.log('Connection closed, exiting')
@@ -101,12 +102,22 @@ if (cluster.isMaster) {
       if (match) {
         data = match[0].trim() //Extract the ip
         flag = blocklist.contains(data)
-        if (flag) {
-          response.writeHead(200, {"Content-Type": "text/html"});
-        } else {
-          response.writeHead(404, {"Content-Type": "text/html"});
+        let resObj = {
+          address: data
         }
-        response.end();
+        if (flag) {
+          response.writeHead(200, {"Content-Type": "application/json"})
+          resObj.blacklisted = true
+          resObj.message = 'IP currently blacklisted'
+          resObj.time = Date.now()
+        } else {
+          response.writeHead(404, {"Content-Type": "application/json"})
+          resObj.blacklisted = false
+        }
+        response.end(JSON.stringify(resObj))
+      } else {
+        response.writeHead(400, {"Content-Type": "text/html"})
+        response.end()
       }
     });
   }
