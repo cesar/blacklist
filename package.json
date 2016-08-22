@@ -6,20 +6,14 @@
   "scripts": {
     "start": "node index.js",
     "test": "NODE_ENV=test ava --verbose --timeout=1m",
-    "ab": "ab -n 1000 -c 100 -p post.txt -T application/x-www-form-urlencoded -e benchmark.csv http://localhost:3000/"
+    "ab": "ab -n 1000 -c 100 -p post.txt -T application/x-www-form-urlencoded -e benchmark.csv http://localhost:8080/"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.15.2",
     "chance": "^1.0.4",
-    "express": "^4.14.0",
-    "ip-address": "^5.8.2",
     "ip-set": "^1.0.1",
-    "multer": "^1.2.0",
     "netmask": "^1.0.6",
-    "request": "^2.74.0",
-    "request-promise": "^4.1.1",
     "shelljs": "^0.7.3",
     "split": "^1.0.0",
     "vinyl-fs": "^2.4.3"
