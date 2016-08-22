@@ -6,7 +6,6 @@ const test = require('ava')
 const listPath = path.resolve(__dirname, '../blocklist-ipsets')
 const testList = path.join(__dirname, '/test-list')
 const IPSet = require('ip-set')
-const request = require('request')
 
 test('testing list fetch should fail, no directory provided', t => {
   t.plan(1)

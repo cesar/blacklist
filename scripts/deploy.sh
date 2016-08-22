@@ -17,7 +17,7 @@ set -ex
 
 ZONE=us-central1-f
 
-GROUP=frontend-group
+GROUP=ads-blocklist-group
 TEMPLATE=$GROUP-tmpl
 MACHINE_TYPE=f1-micro
 IMAGE=debian-8
@@ -29,7 +29,7 @@ MIN_INSTANCES=1
 MAX_INSTANCES=10
 TARGET_UTILIZATION=0.6
 
-SERVICE=frontend-web-service
+SERVICE=ads-blocklist
 
 #
 # Instance group setup
@@ -68,19 +68,6 @@ gcloud compute instance-groups managed set-named-ports \
 
 #
 # Load Balancer Setup
-#
-
-# A complete HTTP load balancer is structured as follows:
-#
-# 1) A global forwarding rule directs incoming requests to a target HTTP proxy.
-# 2) The target HTTP proxy checks each request against a URL map to determine the
-#    appropriate backend service for the request.
-# 3) The backend service directs each request to an appropriate backend based on
-#    serving capacity, zone, and instance health of its attached backends. The
-#    health of each backend instance is verified using either a health check.
-#
-# We'll create these resources in reverse order:
-# service, health check, backend service, url map, proxy.
 
 # Create a health check
 # The load balancer will use this check to keep track of which instances to send traffic to.

@@ -12,82 +12,32 @@
 const list = require('./lib/list')
 const path = require('path')
 const cluster = require('cluster')
-
-let listPath = path.join(__dirname, 'blocklist-ipsets')
-
+const listPath = process.env.LIST_PATH || path.join(__dirname, 'blocklist-ipsets')
 const REFRESH_PERIOD = parseInt(process.env.REFRESH_PERIOD) || 720000
+let server
 
 if (cluster.isMaster) {
-  let workerQueue = []
-
-  list.fetch(listPath).then(() => {
-    const cores = require('os').cpus().length > 3 ? 3 : require('os').cpus().length
-    for (var i = 0; i < cores; i++) {
-      cluster.fork()
-    }
-    // Update the repo and notify the processes
-    setInterval(function () {
-      console.log('Time for a refresh')
-      list.fetch(listPath).then(() => {
-        for (let id in cluster.workers) {
-          workerQueue.push(cluster.workers[id]) // Fill the queu of workers
-        }
-        workerQueue.pop().send('refresh') // Start the refresh process
-      }).catch(err => {
-        console.error(err)
-      })
-    }, REFRESH_PERIOD) // Every 12 mins
-
-  }).catch(err => {
-    console.error(err)
-    process.exit(0)
-  })
-
-  //Restart a worker that has failed
-  cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.id} has died, restarting...`)
-    cluster.fork()
-  })
-
-  // Worker just refreshed a list, on to the next one
-  cluster.on('message', (message) => {
-    if (workerQueue.length > 0) workerQueue.pop().send('refresh')
-    console.log(message)
-  })
-
-} else {
-
   const http = require("http")
-  let server
   let blocklist
 
-  // Bootstrap
-  list.load(listPath).then(result => {
-    blocklist = result
-    server = http.createServer(requestHandler)
-    server.listen(8080, () => {
-      console.log("Server is listening")
-      process.send('process-started')
+  list.fetch(listPath, false).then(() => {
+    list.load(listPath).then(result => {
+      blocklist = result
+      server = http.createServer(requestHandler)
+      server.listen(8080, () => {
+        console.log("Server is listening")
+      })
+      setInterval(function () {
+        console.log('Time for a refresh')
+        cluster.fork()
+      }, REFRESH_PERIOD)
+    }).catch(err => {
+      console.error(err)
+      process.exit(0)
     })
   }).catch(err => {
-    console.error(err)
-    process.exit(0)
-  })
-
-  // refresh
-  process.on('message', (msg) => {
-    if (msg === 'refresh') {
-      server.close(() => {
-        // Connections closed
-        console.log('Connection closed, exiting')
-        process.exit(0)
-      })
-    }
-  })
-
-  // On Error, shutdown process
-  process.on('error', err => {
     console.log(err)
+    console.error('Failed to fetch list')
     process.exit(0)
   })
 
@@ -121,4 +71,25 @@ if (cluster.isMaster) {
       }
     });
   }
+
+
+  // update the list in memory
+  cluster.on('message', message => {
+    list.load(listPath).then(result => {
+      blocklist = result
+    }).catch(err => {
+      console.error(err)
+    })
+  });
+
+} else {
+  // Update the list
+  list.fetch(listPath, false).then(() => {
+    process.send('List update', () => {
+      process.exit(0)
+    })
+  }).catch(err => {
+    console.error(err)
+    process.exit(0)
+  })
 }
