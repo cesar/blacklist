@@ -18,6 +18,7 @@
     "ip-set": "^1.0.1",
     "multer": "^1.2.0",
     "netmask": "^1.0.6",
+    "request": "^2.74.0",
     "shelljs": "^0.7.3",
     "split": "^1.0.0",
     "vinyl-fs": "^2.4.3"

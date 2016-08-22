@@ -65,7 +65,7 @@ if (cluster.isMaster) {
   list.load(listPath).then(result => {
     blocklist = result
     server = http.createServer(requestHandler)
-    server.listen(3000, () => {
+    server.listen(8080, () => {
       console.log("Server is listening")
       process.send('process-started')
     })
