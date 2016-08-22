@@ -18,9 +18,9 @@ set -x
 ZONE=us-central1-f
 gcloud config set compute/zone $ZONE
 
-GROUP=frontend-group
+GROUP=ads-blocklist-group
 TEMPLATE=$GROUP-tmpl
-SERVICE=frontend-web-service
+SERVICE=ads-blocklist
 
 gcloud compute instance-groups managed stop-autoscaling $GROUP --zone $ZONE
 
