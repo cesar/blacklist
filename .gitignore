@@ -39,3 +39,5 @@ jspm_packages
 
 #IPSETS
 blocklist-ipsets
+
+.idea

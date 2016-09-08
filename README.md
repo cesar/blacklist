@@ -1,6 +1,6 @@
-# ADS - Anomaly Detection Service
+# blacklist - Test if an ip address is blacklisted
 
-ADS is a small microservice used to verify whether an IP address is part of an IP black list. The services makes use of Firehol's [blocklist-ipsets](https://github.com/firehol/blocklist-ipsets). 
+blacklist is a small microservice used to verify whether an IP address is part of an IP black list. The services makes use of Firehol's [blocklist-ipsets](https://github.com/firehol/blocklist-ipsets).
 
 ## Installation
 
@@ -59,7 +59,7 @@ Where `<ip>` is the IP address to check in string format. The service will respo
 ## Tests
 
 Tests are executed using [ava](https://github.com/avajs/ava). To run tests, simply:
- 
+
 ```
 $: npm test
 ```
@@ -70,7 +70,7 @@ Also, a script is provided which generates random IP addresses to test against t
 $: node scripts/test_list.js
 ```
 
-The script will output to stdout the total amount of tests and the hits and misses. 
+The script will output to stdout the total amount of tests and the hits and misses.
 
 Additionally, running:
 

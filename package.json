@@ -1,13 +1,14 @@
 {
-  "name": "ads",
+  "name": "blacklist",
   "version": "1.0.0",
-  "description": "Anomaly Detection Service - check whether an IP is blacklisted",
+  "description": "Blacklist - check whether an IP is blacklisted",
   "main": "index.js",
   "scripts": {
-    "start": "node ${SCRIPT:-app.js}",
-    "monitor": "nodemon ${SCRIPT:-app.js}",
-    "test": "NODE_ENV=test ava --verbose --timeout=1m",
-    "ab": "ab -n 1000 -c 100 -p post.txt -T application/x-www-form-urlencoded -e benchmark.csv http://localhost:8080/"
+    "start": "node app.js",
+    "monitor": "nodemon app.js",
+    "test": "NODE_ENV=test ava --verbose --timeout=5m",
+    "ab": "ab -n 1000 -c 100 -p test/post.txt -T application/x-www-form-urlencoded -e benchmark.csv http://localhost:8080/",
+    "postinstall": "scripts/configure-list.js"
   },
   "author": "",
   "license": "MIT",
@@ -15,7 +16,7 @@
     "chance": "^1.0.4",
     "ip-set": "^1.0.1",
     "netmask": "^1.0.6",
-    "shelljs": "^0.7.3",
+    "nodegit": "^0.14.1",
     "split": "^1.0.0",
     "vinyl-fs": "^2.4.3"
   },
